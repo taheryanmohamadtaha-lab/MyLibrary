@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- سه کتاب ایستاده روی هم‌ردیف -->
+    <path android:fillColor="#FFF3E3CF" android:pathData="M30,38h12v34h-12z" />
+    <path android:fillColor="#FFE8B98A" android:pathData="M44,32h13v40h-13z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M59,40h11v32h-11z" />
+    <path android:fillColor="#FF5A3C20" android:pathData="M72,34l10,3l-7,35l-10,-3z" />
+    <path android:fillColor="#FF3E2723" android:pathData="M26,72h56v5h-56z" />
+</vector>
