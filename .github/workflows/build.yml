@@ -24,8 +24,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # SDK روی ubuntu-latest از قبل نصب است؛ فقط مجوزها و پکیج‌های لازم را مطمئن می‌شویم.
+      - name: Prepare Android SDK
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;35.0.0" > /dev/null
 
       - name: Set up Gradle (with cache)
         uses: gradle/actions/setup-gradle@v4
