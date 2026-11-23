@@ -50,6 +50,7 @@ class BookRepository(private val context: Context, private val dao: BookDao) {
     private val coverCache = LruCache<String, ImageBitmap>(64)
 
     val books: Flow<List<BookEntity>> = dao.observeAll()
+    val allBookmarks: Flow<List<BookmarkEntity>> = dao.observeAllBookmarks()
 
     fun bookFile(b: BookEntity): File = File(booksDir, b.fileName)
 

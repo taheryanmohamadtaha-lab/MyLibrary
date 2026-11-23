@@ -106,7 +106,7 @@ private val NightFilter = ColorFilter.colorMatrix(
 )
 
 @Composable
-fun ReaderScreen(bookId: Long, onBack: () -> Unit) {
+fun ReaderScreen(bookId: Long, startPage: Int = -1, onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as MyLibraryApp
     val vm: ReaderViewModel = viewModel(
         key = "reader$bookId",
@@ -134,6 +134,7 @@ fun ReaderScreen(bookId: Long, onBack: () -> Unit) {
             st = st,
             vm = vm,
             night = night,
+            startPage = startPage,
             onToggleNight = { scope.launch { app.container.settings.setNight(!night) } },
             onBack = onBack,
         )
@@ -145,11 +146,13 @@ private fun ReaderContent(
     st: ReaderState.Ready,
     vm: ReaderViewModel,
     night: Boolean,
+    startPage: Int,
     onToggleNight: () -> Unit,
     onBack: () -> Unit,
 ) {
     val count = st.session.pageCount
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = st.book.lastPage.coerceIn(0, (count - 1).coerceAtLeast(0)))
+    val initialPage = if (startPage >= 0) startPage else st.book.lastPage
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialPage.coerceIn(0, (count - 1).coerceAtLeast(0)))
     var scale by rememberSaveable { mutableFloatStateOf(1f) }
     var offsetX by rememberSaveable { mutableFloatStateOf(0f) }
     var showJump by rememberSaveable { mutableStateOf(false) }

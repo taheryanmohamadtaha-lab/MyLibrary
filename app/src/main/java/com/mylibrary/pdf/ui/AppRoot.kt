@@ -46,14 +46,19 @@ fun AppRoot(intentVm: IntentViewModel) {
                         })
                     }
                     composable("main") {
-                        MainScreen(vm = vm, onOpenBook = { id -> nav.navigate("reader/$id") })
+                        MainScreen(vm = vm, onOpenBook = { id -> nav.navigate("reader/$id") },
+                            onOpenPage = { id, page -> nav.navigate("reader/$id?page=$page") })
                     }
                     composable(
-                        "reader/{id}",
-                        arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                        "reader/{id}?page={page}",
+                        arguments = listOf(
+                            navArgument("id") { type = NavType.LongType },
+                            navArgument("page") { type = NavType.IntType; defaultValue = -1 },
+                        ),
                     ) { entry ->
                         ReaderScreen(
                             bookId = entry.arguments?.getLong("id") ?: -1L,
+                            startPage = entry.arguments?.getInt("page") ?: -1,
                             onBack = { nav.popBackStack() },
                         )
                     }

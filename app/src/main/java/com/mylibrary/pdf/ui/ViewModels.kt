@@ -50,6 +50,9 @@ class LibraryViewModel(private val c: AppContainer) : ViewModel() {
         c.repo.books.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val settings: StateFlow<AppSettings?> =
         c.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val allBookmarks: StateFlow<List<BookmarkEntity>> =
+        c.repo.allBookmarks.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    fun deleteBookmark(id: Long) { viewModelScope.launch { c.repo.deleteBookmark(id) } }
 
     val query = MutableStateFlow("")
     val category = MutableStateFlow<String?>(null)

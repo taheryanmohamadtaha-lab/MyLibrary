@@ -97,6 +97,9 @@ interface BookDao {
     @Query("SELECT * FROM bookmarks")
     suspend fun getAllBookmarks(): List<BookmarkEntity>
 
+    @Query("SELECT * FROM bookmarks")
+    fun observeAllBookmarks(): Flow<List<BookmarkEntity>>
+
     @Insert
     suspend fun insertBookmark(b: BookmarkEntity): Long
 

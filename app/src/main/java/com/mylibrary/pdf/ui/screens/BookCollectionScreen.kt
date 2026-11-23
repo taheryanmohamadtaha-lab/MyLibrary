@@ -126,10 +126,12 @@ fun BookCollectionScreen(
     vm: LibraryViewModel,
     progress: ImportProgress?,
     onOpenBook: (Long) -> Unit,
+    onOpenPage: (Long, Int) -> Unit,
     onAdd: () -> Unit,
 ) {
     val booksOrNull by vm.books.collectAsStateWithLifecycle()
     val settingsOrNull by vm.settings.collectAsStateWithLifecycle()
+    val allBookmarks by vm.allBookmarks.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val category by vm.category.collectAsStateWithLifecycle()
     var searching by rememberSaveable { mutableStateOf(false) }
@@ -153,6 +155,18 @@ fun BookCollectionScreen(
     val categories = remember(all) { LibraryLogic.categories(all) }
     val continueList = remember(all, query, favoritesOnly, category) {
         if (favoritesOnly || query.isNotBlank() || category != null) emptyList() else LibraryLogic.continueReading(all)
+    }
+
+    // صفحات نشانک‌شده: فقط در تب علاقه‌مندی‌ها
+    val bms = remember(all, allBookmarks, query, favoritesOnly) {
+        if (!favoritesOnly) {
+            emptyList()
+        } else {
+            val byId = all.associateBy { it.id }
+            allBookmarks.mapNotNull { m -> byId[m.bookId]?.let { it to m } }
+                .filter { (b, _) -> query.isBlank() || b.title.contains(query.trim(), ignoreCase = true) }
+                .sortedByDescending { it.second.createdAt }
+        }
     }
 
     val actions = remember {
@@ -242,10 +256,10 @@ fun BookCollectionScreen(
 
         when {
             all.isEmpty() -> EmptyLibrary(onAdd)
-            shown.isEmpty() && continueList.isEmpty() -> {
+            shown.isEmpty() && continueList.isEmpty() && bms.isEmpty() -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (favoritesOnly && query.isBlank() && category == null) "هنوز کتابی را به علاقه‌مندی‌ها اضافه نکرده‌اید."
+                        if (favoritesOnly && query.isBlank() && category == null) "هنوز کتاب یا صفحه‌ای را به علاقه‌مندی‌ها اضافه نکرده‌اید."
                         else "نتیجه‌ای یافت نشد.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -261,12 +275,24 @@ fun BookCollectionScreen(
                         item(span = { GridItemSpan(maxLineSpan) }) { ContinueRow(continueList, vm.repo, actions) }
                     }
                     items(shown, key = { it.id }) { b -> GridBook(b, vm.repo, actions) }
+                    if (bms.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }, key = "bm_header") { BookmarksHeader() }
+                        items(bms, key = { "bm${it.second.id}" }, span = { GridItemSpan(maxLineSpan) }) { (b, m) ->
+                            BookmarkRow(b, m.page, vm.repo, { onOpenPage(b.id, m.page) }, { vm.deleteBookmark(m.id) })
+                        }
+                    }
                 }
             }
             else -> {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 96.dp)) {
                     if (continueList.isNotEmpty()) item { ContinueRow(continueList, vm.repo, actions) }
                     items(shown, key = { it.id }) { b -> ListBook(b, vm.repo, actions) }
+                    if (bms.isNotEmpty()) {
+                        item(key = "bm_header") { BookmarksHeader() }
+                        items(bms, key = { "bm${it.second.id}" }) { (b, m) ->
+                            BookmarkRow(b, m.page, vm.repo, { onOpenPage(b.id, m.page) }, { vm.deleteBookmark(m.id) })
+                        }
+                    }
                 }
             }
         }
@@ -411,6 +437,39 @@ private fun BookMenu(expanded: Boolean, onDismiss: () -> Unit, b: BookEntity, a:
         DropdownMenuItem(text = { Text("اشتراک‌گذاری فایل") }, leadingIcon = { Icon(Icons.Filled.Share, null) }, onClick = { onDismiss(); a.share(b) })
         DropdownMenuItem(text = { Text("اطلاعات فایل") }, leadingIcon = { Icon(Icons.Filled.Info, null) }, onClick = { onDismiss(); a.info(b) })
         DropdownMenuItem(text = { Text("حذف") }, leadingIcon = { Icon(Icons.Filled.Delete, null) }, onClick = { onDismiss(); a.delete(b) })
+    }
+}
+
+// ------------------------------------------------------------------ نشانک‌ها
+
+@Composable
+private fun BookmarksHeader() {
+    Text(
+        "صفحات نشانک‌شده",
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun BookmarkRow(b: BookEntity, page: Int, repo: BookRepository, onOpen: () -> Unit, onDelete: () -> Unit) {
+    Card(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).clickable { onOpen() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            BookCover(b, repo, Modifier.width(40.dp).height(56.dp).clip(RoundedCornerShape(5.dp)))
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text(b.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "صفحه ${(page + 1).fa()} از ${b.pageCount.fa()}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onDelete) { Icon(Icons.Filled.Close, "حذف نشانک") }
+        }
     }
 }
 

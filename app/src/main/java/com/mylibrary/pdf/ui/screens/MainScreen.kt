@@ -43,7 +43,7 @@ import com.mylibrary.pdf.ui.UiEvent
 import com.mylibrary.pdf.util.fa
 
 @Composable
-fun MainScreen(vm: LibraryViewModel, onOpenBook: (Long) -> Unit) {
+fun MainScreen(vm: LibraryViewModel, onOpenBook: (Long) -> Unit, onOpenPage: (Long, Int) -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val snackbar = remember { SnackbarHostState() }
     val progress by vm.importProgress.collectAsStateWithLifecycle()
@@ -97,8 +97,8 @@ fun MainScreen(vm: LibraryViewModel, onOpenBook: (Long) -> Unit) {
         // فقط فاصله پایین را اعمال می‌کنیم؛ TopAppBar خودش فضای نوار وضعیت را مدیریت می‌کند.
         Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding())) {
             when (tab) {
-                0 -> BookCollectionScreen("کتابخانه من", false, vm, progress, onOpenBook, addPdf)
-                1 -> BookCollectionScreen("علاقه‌مندی‌ها", true, vm, progress, onOpenBook, addPdf)
+                0 -> BookCollectionScreen("کتابخانه من", false, vm, progress, onOpenBook, onOpenPage, addPdf)
+                1 -> BookCollectionScreen("علاقه‌مندی‌ها", true, vm, progress, onOpenBook, onOpenPage, addPdf)
                 else -> SettingsScreen(vm)
             }
         }
